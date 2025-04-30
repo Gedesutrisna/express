@@ -6,10 +6,16 @@ const multer = require("multer");
 const path = require("path");
 const cors = require("cors");
 const port = process.env.PORT || 4000;
+const midtransClient = require("midtrans-client");
 
 app.use(express.json());
-app.use(cors());
-const midtransClient = require("midtrans-client");
+app.use(
+  cors({
+    origin: ["http://localhost:3000", "http://localhost:4000"], // Allow requests from these origins
+    methods: "GET, POST, PUT, DELETE", // Allow specific methods
+    allowedHeaders: "Content-Type, Authorization, auth-token", // Allow these headers
+  })
+);
 
 let snap = new midtransClient.Snap({
   isProduction: false,
@@ -386,7 +392,14 @@ app.post("/midtrans-callback", async (req, res) => {
       order.paymentResponse = callbackData;
       await order.save();
 
-      await Users.findByIdAndUpdate(order.userId, { cartData: {} });
+      const user = await Users.findById(order.userId);
+      if (user && user.cartData) {
+        const newCartData = {};
+        for (let key in user.cartData) {
+          newCartData[key] = 0;
+        }
+        await Users.findByIdAndUpdate(order.userId, { cartData: newCartData });
+      }
 
       console.log(`Order ${orderId} berhasil dibayar`);
     } else if (
