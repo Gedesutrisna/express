@@ -371,7 +371,7 @@ app.post("/create-transaction", fetchuser, async (req, res) => {
 });
 
 // Callback dari Midtrans
-app.post("/midtrans-callback", async (req, res) => {
+app.post("/api/midtrans-callback", async (req, res) => {
   try {
     const callbackData = req.body;
 
